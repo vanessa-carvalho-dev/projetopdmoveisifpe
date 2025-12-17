@@ -4,16 +4,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { CONTESTS, Contest } from '@/constants/contestsData';
 import { ContestCard } from '@/components/ContestCard';
 
 const PROFILE_STORAGE_KEY = 'souconcursado.userProfile';
+const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults';
 
 type UserProfile = {
   profileId: string;
@@ -43,25 +46,35 @@ const profileToLevelMap: { [key: string]: string[] } = {
 
 export default function RecommendedContestsScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [hasQuizResults, setHasQuizResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const palette = Colors.dark;
 
   useEffect(() => {
-    loadProfile();
+    loadData();
   }, []);
 
-  const loadProfile = async () => {
+  const loadData = async () => {
     try {
       const profileData = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
       if (profileData) {
         setProfile(JSON.parse(profileData));
       }
+
+      // Verificar se há resultados de quizzes de matérias
+      const quizResultsData = await AsyncStorage.getItem(QUIZ_RESULTS_STORAGE_KEY);
+      if (quizResultsData) {
+        const results = JSON.parse(quizResultsData);
+        setHasQuizResults(Object.keys(results).length > 0);
+      }
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const shouldShowStudyCard = profile && !hasQuizResults;
 
   // Filtrar concursos baseado no perfil
   const filteredContests = useMemo(() => {
@@ -137,6 +150,32 @@ export default function RecommendedContestsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmptyState}
+          ListHeaderComponent={
+            shouldShowStudyCard ? (
+              <Pressable
+                onPress={() => router.push('/(tabs)/studies')}
+                style={({ pressed }) => [
+                  styles.studyCard,
+                  pressed && styles.studyCardPressed,
+                ]}>
+                <MaterialCommunityIcons
+                  name="lightbulb-on-outline"
+                  size={24}
+                  color={palette.accent}
+                />
+                <View style={styles.studyCardContent}>
+                  <Text style={styles.studyCardText}>
+                    Aumente suas chances: descubra seus pontos fortes e fracos agora.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color={palette.mutedText}
+                />
+              </Pressable>
+            ) : null
+          }
         />
       </View>
     </SafeAreaView>
@@ -209,5 +248,31 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
+  },
+  studyCard: {
+    backgroundColor: palette.card,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 16,
+    marginHorizontal: 22,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  studyCardPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  studyCardContent: {
+    flex: 1,
+  },
+  studyCardText: {
+    color: palette.text,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 22,
   },
 });

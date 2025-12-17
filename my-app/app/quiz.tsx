@@ -1,5 +1,6 @@
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import {
   Animated,
   Pressable,
@@ -13,17 +14,33 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { QUESTIONS, Question, UserAnswers } from '@/constants/questionsData';
 import { matchProfile } from '@/utils/profileMatcher';
+import { generateMockQuestions } from '@/constants/subjectQuestionsData';
+import { SubjectId, SUBJECTS } from '@/constants/subjectsData';
+
+const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults';
 
 export default function QuizScreen() {
+  const params = useLocalSearchParams<{ subjectId?: string; subjectName?: string }>();
+  const isSubjectQuiz = !!params.subjectId;
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<UserAnswers>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [slideAnim] = useState(new Animated.Value(0));
   const palette = Colors.dark;
 
-  const currentQuestion = QUESTIONS[currentQuestionIndex];
+  // Determinar quais questões usar
+  const questions = useMemo(() => {
+    if (isSubjectQuiz && params.subjectId) {
+      const subject = SUBJECTS.find((s) => s.id === params.subjectId as SubjectId);
+      return generateMockQuestions(params.subjectId as SubjectId, subject?.questionCount || 10);
+    }
+    return QUESTIONS;
+  }, [isSubjectQuiz, params.subjectId]);
+
+  const currentQuestion = questions[currentQuestionIndex];
   const isFirstQuestion = currentQuestionIndex === 0;
-  const isLastQuestion = currentQuestionIndex === QUESTIONS.length - 1;
-  const progress = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const selectedAnswer = answers[currentQuestion.id];
 
   const handleSelectAnswer = (optionId: string) => {
@@ -33,7 +50,7 @@ export default function QuizScreen() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedAnswer) return;
 
     // Garantir que a resposta atual está salva
@@ -43,16 +60,45 @@ export default function QuizScreen() {
     };
 
     if (isLastQuestion) {
-      // Navegar para a tela de resultado
-      const profile = matchProfile(updatedAnswers);
-      router.push({
-        pathname: '/quiz-result',
-        params: {
-          profileId: profile.id,
-          profileName: profile.name,
-          profileDescription: profile.description,
-        },
-      });
+      if (isSubjectQuiz && params.subjectId) {
+        // Calcular acertos para quiz de matéria
+        let correctAnswers = 0;
+        questions.forEach((q) => {
+          const userAnswer = updatedAnswers[q.id];
+          if (userAnswer === q.correctAnswerId) {
+            correctAnswers++;
+          }
+        });
+
+        // Salvar resultado
+        try {
+          const resultsData = await AsyncStorage.getItem(QUIZ_RESULTS_STORAGE_KEY);
+          const results = resultsData ? JSON.parse(resultsData) : {};
+          results[params.subjectId] = {
+            subjectId: params.subjectId,
+            correctAnswers,
+            totalQuestions: questions.length,
+            completedAt: new Date().toISOString(),
+          };
+          await AsyncStorage.setItem(QUIZ_RESULTS_STORAGE_KEY, JSON.stringify(results));
+        } catch (error) {
+          console.error('Erro ao salvar resultado do quiz:', error);
+        }
+
+        // Voltar para a tela de Estudos
+        router.push('/(tabs)/studies');
+      } else {
+        // Navegar para a tela de resultado do perfil vocacional
+        const profile = matchProfile(updatedAnswers as UserAnswers);
+        router.push({
+          pathname: '/quiz-result',
+          params: {
+            profileId: profile.id,
+            profileName: profile.name,
+            profileDescription: profile.description,
+          },
+        });
+      }
     } else {
       // Animar transição
       Animated.sequence([
@@ -116,10 +162,11 @@ export default function QuizScreen() {
     return iconMap[iconName || ''] || 'circle-outline';
   };
 
-  const renderOption = (option: Question['options'][0], questionType: Question['type']) => {
+  const renderOption = (option: any, questionType?: string) => {
     const isSelected = selectedAnswer === option.id;
 
-    if (questionType === 'list') {
+    // Para quizzes de matérias, sempre usar formato de lista
+    if (isSubjectQuiz || (!isSubjectQuiz && questionType === 'list')) {
       return (
         <Pressable
           key={option.id}
@@ -144,7 +191,7 @@ export default function QuizScreen() {
       );
     }
 
-    if (questionType === 'grid_icons' || questionType === 'cards') {
+    if (!isSubjectQuiz && (questionType === 'grid_icons' || questionType === 'cards')) {
       return (
         <Pressable
           key={option.id}
@@ -187,7 +234,7 @@ export default function QuizScreen() {
             <View style={[styles.progressBar, { width: `${progress}%` }]} />
           </View>
           <Text style={styles.progressText}>
-            Questão {currentQuestionIndex + 1} de {QUESTIONS.length}
+            Questão {currentQuestionIndex + 1} de {questions.length}
           </Text>
         </View>
 
@@ -209,11 +256,11 @@ export default function QuizScreen() {
             <View
               style={[
                 styles.optionsContainer,
-                currentQuestion.type === 'grid_icons' || currentQuestion.type === 'cards'
+                !isSubjectQuiz && (currentQuestion.type === 'grid_icons' || currentQuestion.type === 'cards')
                   ? styles.optionsGrid
                   : styles.optionsList,
               ]}>
-              {currentQuestion.options.map((option) => renderOption(option, currentQuestion.type))}
+              {currentQuestion.options.map((option) => renderOption(option, (currentQuestion as any).type))}
             </View>
           </Animated.View>
         </ScrollView>

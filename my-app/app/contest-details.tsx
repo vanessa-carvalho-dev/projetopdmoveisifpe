@@ -186,6 +186,23 @@ export default function ContestDetailsScreen() {
           </Text>
         </View>
 
+        {/* Seção de Nivelamento */}
+        <View style={styles.levelingSection}>
+          <Text style={styles.sectionTitle}>Nivelamento</Text>
+          <Text style={styles.levelingText}>
+            Este concurso exige conhecimentos em matérias-base. Verifique se você está preparado.
+          </Text>
+          <Pressable
+            onPress={() => router.push('/(tabs)/studies')}
+            style={({ pressed }) => [
+              styles.levelingButton,
+              pressed && styles.levelingButtonPressed,
+            ]}>
+            <MaterialCommunityIcons name="school-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.levelingButtonText}>Fazer Quiz de Nivelamento</Text>
+          </Pressable>
+        </View>
+
         {/* Botão de Ação */}
         <Pressable
           onPress={handleOpenLink}
@@ -339,6 +356,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
     fontWeight: '600',
+  },
+  levelingSection: {
+    backgroundColor: palette.card,
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+  },
+  levelingText: {
+    color: palette.mutedText,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  levelingButton: {
+    backgroundColor: palette.accent,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  levelingButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  levelingButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
   },
   actionButton: {
     backgroundColor: palette.accent,
