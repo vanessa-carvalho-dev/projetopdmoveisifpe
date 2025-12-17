@@ -59,7 +59,7 @@ export default function WelcomeScreen() {
           <Text style={styles.cardSubtitle}>Iniciar Quiz Vocacional</Text>
 
           <Pressable
-            onPress={() => router.replace('/(tabs)')}
+            onPress={() => router.push('/quiz')}
             style={({ pressed }) => [styles.primaryButton, pressed ? styles.pressed : null]}>
             <Text style={styles.primaryText}>Começar</Text>
           </Pressable>
