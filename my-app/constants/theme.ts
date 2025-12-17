@@ -5,8 +5,9 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#3F63FF';
+const tintColorDark = '#5B61FF';
+const tintColorDark2 = '#2D86FF';
 
 export const Colors = {
   light: {
@@ -16,14 +17,32 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    card: '#F5F7FA',
+    cardBorder: 'rgba(17,24,28,0.08)',
+    mutedText: '#5B6770',
+    inputBg: '#FFFFFF',
+    inputBorder: 'rgba(17,24,28,0.10)',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F4F7FB',
+    background: '#070A12',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#94A3B8',
+    tabIconDefault: 'rgba(244,247,251,0.55)',
     tabIconSelected: tintColorDark,
+    mutedText: 'rgba(244,247,251,0.65)',
+    card: '#0B1422',
+    card2: '#0E1C2C',
+    cardBorder: 'rgba(255,255,255,0.10)',
+    inputBg: 'rgba(255,255,255,0.04)',
+    inputBorder: 'rgba(255,255,255,0.09)',
+    divider: 'rgba(255,255,255,0.12)',
+    accent: tintColorDark,
+    accent2: tintColorDark2,
+    buttonTextOnAccent: '#0A0D14',
+    error: '#FF6B6B',
+    glow1: 'rgba(94,92,230,0.20)',
+    glow2: 'rgba(45,134,255,0.18)',
   },
 };
 
