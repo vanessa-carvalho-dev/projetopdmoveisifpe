@@ -1,9 +1,12 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
+
+const PROFILE_STORAGE_KEY = 'souconcursado.userProfile';
 
 export default function QuizResultScreen() {
   const params = useLocalSearchParams<{
@@ -26,9 +29,29 @@ export default function QuizResultScreen() {
     return iconMap[profileId] || 'account-check-outline';
   };
 
+  useEffect(() => {
+    // Salvar perfil no AsyncStorage quando a tela carregar
+    const saveProfile = async () => {
+      try {
+        const profileData = {
+          profileId: params.profileId,
+          profileName: params.profileName,
+          profileDescription: params.profileDescription,
+        };
+        await AsyncStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileData));
+      } catch (error) {
+        console.error('Erro ao salvar perfil:', error);
+      }
+    };
+
+    if (params.profileId) {
+      saveProfile();
+    }
+  }, [params.profileId, params.profileName, params.profileDescription]);
+
   const handleSeeConcursos = () => {
-    // Navegar para a tela de concursos recomendados (pode ser implementada depois)
-    router.push('/(tabs)/careers');
+    // Navegar para a tela de concursos recomendados
+    router.push('/(tabs)');
   };
 
   return (

@@ -1,98 +1,213 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/theme';
+import { CONTESTS, Contest } from '@/constants/contestsData';
+import { ContestCard } from '@/components/ContestCard';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const PROFILE_STORAGE_KEY = 'souconcursado.userProfile';
 
-export default function HomeScreen() {
+type UserProfile = {
+  profileId: string;
+  profileName: string;
+  profileDescription: string;
+};
+
+// Mapeamento de perfil para categoria de concurso
+const profileToCategoryMap: { [key: string]: string[] } = {
+  estrategista_admin: ['admin'],
+  guardiao_operacional: ['police'],
+  analista_fiscal: ['fiscal'],
+  jurista_publico: ['legal'],
+  servidor_social: ['health', 'education'],
+  planejador_estrategico: ['admin'],
+};
+
+// Mapeamento de perfil para nível preferido (baseado nas respostas do quiz)
+const profileToLevelMap: { [key: string]: string[] } = {
+  estrategista_admin: ['medium', 'superior'],
+  guardiao_operacional: ['medium', 'superior'],
+  analista_fiscal: ['superior'],
+  jurista_publico: ['superior'],
+  servidor_social: ['medium', 'superior'],
+  planejador_estrategico: ['superior'],
+};
+
+export default function RecommendedContestsScreen() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const palette = Colors.dark;
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const profileData = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
+      if (profileData) {
+        setProfile(JSON.parse(profileData));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtrar concursos baseado no perfil
+  const filteredContests = useMemo(() => {
+    if (!profile) {
+      // Se não houver perfil, retornar todos os concursos
+      return CONTESTS;
+    }
+
+    const categories = profileToCategoryMap[profile.profileId] || [];
+    const levels = profileToLevelMap[profile.profileId] || ['medium', 'superior'];
+
+    return CONTESTS.filter((contest) => {
+      const matchesCategory = categories.length === 0 || categories.includes(contest.category);
+      const matchesLevel = levels.includes(contest.level);
+      return matchesCategory && matchesLevel;
+    });
+  }, [profile]);
+
+  const handleContestPress = (contest: Contest) => {
+    router.push({
+      pathname: '/contest-details',
+      params: {
+        contestId: contest.id,
+      },
+    });
+  };
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyTitle}>Nenhum concurso encontrado</Text>
+      <Text style={styles.emptyText}>
+        Não encontramos concursos que correspondam ao seu perfil no momento.
+      </Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={palette.accent} />
+          <Text style={styles.loadingText}>Carregando...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.container}>
+        {/* Cabeçalho */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>
+            Seu Perfil: {profile?.profileName || 'Não definido'}
+          </Text>
+          {profile && (
+            <Text style={styles.headerSubtitle}>
+              {filteredContests.length} {filteredContests.length === 1 ? 'concurso encontrado' : 'concursos encontrados'}
+            </Text>
+          )}
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Lista de Concursos */}
+        <FlatList
+          data={filteredContests}
+          renderItem={({ item }) => (
+            <ContestCard contest={item} onPress={() => handleContestPress(item)} />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={[
+            styles.listContent,
+            filteredContests.length === 0 && styles.listContentEmpty,
+          ]}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmptyState}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
+const palette = Colors.dark;
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  safe: {
+    flex: 1,
+    backgroundColor: palette.background,
+  },
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  loadingText: {
+    color: palette.mutedText,
+    fontSize: 14,
+    fontWeight: '700',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  header: {
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.cardBorder,
+  },
+  headerTitle: {
+    color: palette.text,
+    fontSize: 24,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: palette.mutedText,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  listContent: {
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  listContentEmpty: {
+    flexGrow: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    color: palette.text,
+    fontSize: 20,
+    fontWeight: '900',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: palette.mutedText,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
   },
 });
