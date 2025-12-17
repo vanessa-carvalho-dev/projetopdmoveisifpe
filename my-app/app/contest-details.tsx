@@ -190,7 +190,7 @@ export default function ContestDetailsScreen() {
         <View style={styles.levelingSection}>
           <Text style={styles.sectionTitle}>Nivelamento</Text>
           <Text style={styles.levelingText}>
-            Este concurso exige conhecimentos em matérias-base. Verifique se você está preparado.
+            Este concurso exige conhecimentos em matérias-base. Que tal verificar se você está preparado?
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/studies')}
@@ -199,7 +199,7 @@ export default function ContestDetailsScreen() {
               pressed && styles.levelingButtonPressed,
             ]}>
             <MaterialCommunityIcons name="school-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.levelingButtonText}>Fazer Quiz de Nivelamento</Text>
+            <Text style={styles.levelingButtonText}>Quero testar meus conhecimentos</Text>
           </Pressable>
         </View>
 

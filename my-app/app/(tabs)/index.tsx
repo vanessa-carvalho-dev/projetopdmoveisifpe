@@ -165,7 +165,7 @@ export default function RecommendedContestsScreen() {
                 />
                 <View style={styles.studyCardContent}>
                   <Text style={styles.studyCardText}>
-                    Aumente suas chances: descubra seus pontos fortes e fracos agora.
+                    Não sabe por onde começar? 🤯 Descubra seu nível agora mesmo e monte sua estratégia!
                   </Text>
                 </View>
                 <MaterialCommunityIcons

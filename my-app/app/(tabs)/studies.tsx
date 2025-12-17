@@ -64,6 +64,19 @@ export default function StudiesScreen() {
     return quizResults[subjectId] || null;
   };
 
+  const getEncouragementMessage = (correctAnswers: number, totalQuestions: number): string => {
+    const percentage = (correctAnswers / totalQuestions) * 100;
+    if (percentage >= 80) {
+      return 'Excelente! 🎉';
+    } else if (percentage >= 60) {
+      return 'Mandou bem! 👏';
+    } else if (percentage >= 40) {
+      return 'Bora melhorar? 💪';
+    } else {
+      return 'Continue praticando! 📚';
+    }
+  };
+
   const renderSubjectCard = ({ item: subject }: { item: Subject }) => {
     const result = getSubjectResult(subject.id);
     const isCompleted = result !== null;
@@ -98,9 +111,27 @@ export default function StudiesScreen() {
                 ]}
               />
             </View>
-            <Text style={styles.resultText}>
-              Acertos: {result.correctAnswers}/{result.totalQuestions}
-            </Text>
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText}>
+                Acertos: {result.correctAnswers}/{result.totalQuestions}
+              </Text>
+              <Text style={styles.encouragementText}>
+                {getEncouragementMessage(result.correctAnswers, result.totalQuestions)}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => handleStartQuiz(subject)}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed && styles.retryButtonPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name="refresh"
+                size={16}
+                color={palette.accent}
+              />
+              <Text style={styles.retryButtonText}>Refazer teste</Text>
+            </Pressable>
           </View>
         ) : (
           <Pressable
@@ -128,8 +159,7 @@ export default function StudiesScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Guia de Estudos</Text>
           <Text style={styles.subtitle}>
-            Realize os diagnósticos abaixo para identificar seu nível atual nas
-            matérias-base.
+            Vamos descobrir seus pontos fortes? 🚀 Responda a quizzes rápidos e saiba exatamente onde focar sua energia.
           </Text>
         </View>
 
@@ -218,6 +248,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   resultContainer: {
+    gap: 12,
+  },
+  resultTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 8,
   },
   progressBarContainer: {
@@ -235,7 +272,33 @@ const styles = StyleSheet.create({
     color: palette.accent,
     fontSize: 14,
     fontWeight: '800',
-    textAlign: 'center',
+    flex: 1,
+  },
+  encouragementText: {
+    color: palette.text,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.accent,
+    backgroundColor: 'transparent',
+  },
+  retryButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  retryButtonText: {
+    color: palette.accent,
+    fontSize: 14,
+    fontWeight: '800',
   },
   startButton: {
     backgroundColor: palette.accent,
