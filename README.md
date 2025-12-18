@@ -20,7 +20,7 @@ O seu objetivo principal é filtrar o universo diverso dos concursos e dar um po
     - Permite que o utilizador clique num concurso da lista para ver mais informações incluindo o link para edital
 - **Guia de Estudos:**
     - Um guia para iniciar os estudos na área recomendada com indicação de matérias que precisam ser estudadas
-- **Quiz de nivelamento:**
+- **Quiz de Nivelamento:**
     - Ligado ao Guia de Estudos, esta funcionalidade permite ao utilizador fazer um breve quiz para cada matéria-base. O objetivo é que ele tenha uma percepção inicial do seu próprio nível e saiba onde precisa de concentrar mais os seus esforços.
 
 ## Tecnologias Utilizadas
@@ -62,12 +62,6 @@ Execute o comando para iniciar o servidor Expo:
 
 ```bash
 npm start
-```
-
-ou:
-
-```bash
-npx expo start
 ```
 
 ### 3. Executar no Dispositivo ou Emulador
@@ -121,7 +115,7 @@ projetopdmoveisifpe/
 └── README.md                 # Este arquivo
 ```
 
-## Contexto do Projeto
+## Sobre este Projeto
 
 Este projeto está sendo desenvolvido para avaliação na disciplina de **Programação para Dispositivos Móveis** do IFPE (Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco).
 
@@ -130,7 +124,6 @@ Este projeto está sendo desenvolvido para avaliação na disciplina de **Progra
 
 - [Documentação do Expo](https://docs.expo.dev/)
 - [Documentação do React Native](https://reactnative.dev/docs/getting-started)
-- [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
 
 ---
 

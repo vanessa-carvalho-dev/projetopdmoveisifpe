@@ -61,20 +61,10 @@ export default function ContestDetailsScreen() {
 
   const statusConfig = getStatusConfig(contest.status);
 
-  // Função para gerar URL do PCI Concursos baseado no concurso
-  const getPCIConcursosLink = (contestData: Contest): string => {
-    // Criar uma URL de busca no PCI Concursos baseada na instituição e cargo
-    const searchQuery = encodeURIComponent(`${contestData.institution} ${contestData.role}`);
-    return `https://www.pciconcursos.com.br/busca?q=${searchQuery}`;
-  };
-
   const handleOpenLink = async () => {
     try {
-      // Usar link do PCI Concursos ao invés do link direto
-      const pciLink = getPCIConcursosLink(contest);
-      const canOpen = await Linking.canOpenURL(pciLink);
-      if (canOpen) {
-        await Linking.openURL(pciLink);
+      if (contest.details.link) {
+        await Linking.openURL(contest.details.link);
       }
     } catch (error) {
       console.error('Erro ao abrir link:', error);
@@ -226,13 +216,9 @@ export default function ContestDetailsScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}>
-          <MaterialCommunityIcons name="open-in-new" size={20} color="#FFFFFF" />
+          <MaterialCommunityIcons name="information-outline" size={20} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>
-            {contest.status === 'open'
-              ? 'Ver no PCI Concursos'
-              : contest.status === 'soon'
-                ? 'Ver no PCI Concursos'
-                : 'Ver no PCI Concursos'}
+            Ver Detalhes
           </Text>
         </Pressable>
       </ScrollView>
