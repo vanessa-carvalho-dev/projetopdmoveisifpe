@@ -12,11 +12,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
-import { CONTESTS, Contest } from '@/constants/contestsData';
+import { Contest } from '@/constants/contestsData';
 import { ContestCard } from '@/components/ContestCard';
+import { getRecommendedContests } from '@/utils/profileMatcher';
+import { UserAnswers } from '@/constants/questionsData';
 
 const PROFILE_STORAGE_KEY = 'souconcursado.userProfile';
 const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults';
+const QUIZ_ANSWERS_STORAGE_KEY = 'souconcursado.quizAnswers';
 
 type UserProfile = {
   profileId: string;
@@ -24,28 +27,9 @@ type UserProfile = {
   profileDescription: string;
 };
 
-// Mapeamento de perfil para categoria de concurso
-const profileToCategoryMap: { [key: string]: string[] } = {
-  estrategista_admin: ['admin'],
-  guardiao_operacional: ['police'],
-  analista_fiscal: ['fiscal'],
-  jurista_publico: ['legal'],
-  servidor_social: ['health', 'education'],
-  planejador_estrategico: ['admin'],
-};
-
-// Mapeamento de perfil para nível preferido (baseado nas respostas do quiz)
-const profileToLevelMap: { [key: string]: string[] } = {
-  estrategista_admin: ['medium', 'superior'],
-  guardiao_operacional: ['medium', 'superior'],
-  analista_fiscal: ['superior'],
-  jurista_publico: ['superior'],
-  servidor_social: ['medium', 'superior'],
-  planejador_estrategico: ['superior'],
-};
-
 export default function RecommendedContestsScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<UserAnswers | null>(null);
   const [hasQuizResults, setHasQuizResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const palette = Colors.dark;
@@ -59,6 +43,12 @@ export default function RecommendedContestsScreen() {
       const profileData = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
       if (profileData) {
         setProfile(JSON.parse(profileData));
+      }
+
+      // Carregar respostas do quiz para filtragem
+      const quizAnswersData = await AsyncStorage.getItem(QUIZ_ANSWERS_STORAGE_KEY);
+      if (quizAnswersData) {
+        setQuizAnswers(JSON.parse(quizAnswersData));
       }
 
       // Verificar se há resultados de quizzes de matérias
@@ -76,22 +66,21 @@ export default function RecommendedContestsScreen() {
 
   const shouldShowStudyCard = profile && !hasQuizResults;
 
-  // Filtrar concursos baseado no perfil
+  // Filtrar concursos baseado no perfil e requisitos
   const filteredContests = useMemo(() => {
     if (!profile) {
-      // Se não houver perfil, retornar todos os concursos
-      return CONTESTS;
+      // Se não houver perfil, retornar array vazio (ou todos os concursos, dependendo da regra de negócio)
+      return [];
     }
 
-    const categories = profileToCategoryMap[profile.profileId] || [];
-    const levels = profileToLevelMap[profile.profileId] || ['medium', 'superior'];
+    // Se houver respostas do quiz, usar a nova função de filtragem baseada em requisitos
+    if (quizAnswers) {
+      return getRecommendedContests(quizAnswers, profile.profileId);
+    }
 
-    return CONTESTS.filter((contest) => {
-      const matchesCategory = categories.length === 0 || categories.includes(contest.category);
-      const matchesLevel = levels.includes(contest.level);
-      return matchesCategory && matchesLevel;
-    });
-  }, [profile]);
+    // Fallback: retornar array vazio se não houver respostas
+    return [];
+  }, [profile, quizAnswers]);
 
   const handleContestPress = (contest: Contest) => {
     router.push({
@@ -100,6 +89,19 @@ export default function RecommendedContestsScreen() {
         contestId: contest.id,
       },
     });
+  };
+
+  const handleRefazerQuiz = async () => {
+    try {
+      // Limpar dados do quiz e perfil
+      await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
+      await AsyncStorage.removeItem(QUIZ_ANSWERS_STORAGE_KEY);
+      
+      // Navegar para a tela do quiz
+      router.push('/quiz');
+    } catch (error) {
+      console.error('Erro ao limpar dados do quiz:', error);
+    }
   };
 
   const renderEmptyState = () => (
@@ -127,14 +129,33 @@ export default function RecommendedContestsScreen() {
       <View style={styles.container}>
         {/* Cabeçalho */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            Seu Perfil: {profile?.profileName || 'Não definido'}
-          </Text>
-          {profile && (
-            <Text style={styles.headerSubtitle}>
-              {filteredContests.length} {filteredContests.length === 1 ? 'concurso encontrado' : 'concursos encontrados'}
-            </Text>
-          )}
+          <View style={styles.headerTop}>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>
+                Seu Perfil: {profile?.profileName || 'Não definido'}
+              </Text>
+              {profile && (
+                <Text style={styles.headerSubtitle}>
+                  {filteredContests.length} {filteredContests.length === 1 ? 'concurso encontrado' : 'concursos encontrados'}
+                </Text>
+              )}
+            </View>
+            {profile && (
+              <Pressable
+                onPress={handleRefazerQuiz}
+                style={({ pressed }) => [
+                  styles.refazerButton,
+                  pressed && styles.refazerButtonPressed,
+                ]}>
+                <MaterialCommunityIcons
+                  name="refresh"
+                  size={18}
+                  color={palette.accent}
+                />
+                <Text style={styles.refazerButtonText}>Refazer</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
 
         {/* Lista de Concursos */}
@@ -210,6 +231,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: palette.cardBorder,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
   headerTitle: {
     color: palette.text,
     fontSize: 24,
@@ -220,6 +250,26 @@ const styles = StyleSheet.create({
     color: palette.mutedText,
     fontSize: 14,
     fontWeight: '700',
+  },
+  refazerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.accent,
+    backgroundColor: 'transparent',
+  },
+  refazerButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  refazerButtonText: {
+    color: palette.accent,
+    fontSize: 13,
+    fontWeight: '800',
   },
   listContent: {
     paddingHorizontal: 22,

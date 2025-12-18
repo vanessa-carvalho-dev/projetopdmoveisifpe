@@ -95,6 +95,28 @@ export const QUESTIONS: Question[] = [
       { id: 'change', label: 'Mudar de área profissional' },
     ],
   },
+  {
+    id: 8,
+    question: 'Você possui Carteira Nacional de Habilitação (CNH)?',
+    type: 'list',
+    options: [
+      { id: 'yes', label: 'Sim, possuo CNH' },
+      { id: 'no', label: 'Não possuo CNH' },
+    ],
+  },
+  {
+    id: 9,
+    question: 'Qual a sua idade?',
+    type: 'list',
+    options: [
+      { id: '18-25', label: '18 a 25 anos' },
+      { id: '26-30', label: '26 a 30 anos' },
+      { id: '31-35', label: '31 a 35 anos' },
+      { id: '36-40', label: '36 a 40 anos' },
+      { id: '41-45', label: '41 a 45 anos' },
+      { id: '46+', label: 'Acima de 45 anos' },
+    ],
+  },
 ];
 
 export type UserAnswers = {

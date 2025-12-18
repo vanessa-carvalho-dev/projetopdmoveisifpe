@@ -18,6 +18,7 @@ import { generateMockQuestions } from '@/constants/subjectQuestionsData';
 import { SubjectId, SUBJECTS } from '@/constants/subjectsData';
 
 const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults';
+const QUIZ_ANSWERS_STORAGE_KEY = 'souconcursado.quizAnswers';
 
 export default function QuizScreen() {
   const params = useLocalSearchParams<{ subjectId?: string; subjectName?: string }>();
@@ -88,6 +89,13 @@ export default function QuizScreen() {
         // Voltar para a tela de Estudos
         router.push('/(tabs)/studies');
       } else {
+        // Salvar respostas do quiz para uso na filtragem de concursos
+        try {
+          await AsyncStorage.setItem(QUIZ_ANSWERS_STORAGE_KEY, JSON.stringify(updatedAnswers));
+        } catch (error) {
+          console.error('Erro ao salvar respostas do quiz:', error);
+        }
+
         // Navegar para a tela de resultado do perfil vocacional
         const profile = matchProfile(updatedAnswers as UserAnswers);
         router.push({

@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
-import { CONTESTS, ContestStatus } from '@/constants/contestsData';
+import { CONTESTS, ContestStatus, Contest } from '@/constants/contestsData';
 
 export default function ContestDetailsScreen() {
   const params = useLocalSearchParams<{ contestId: string }>();
@@ -61,11 +61,20 @@ export default function ContestDetailsScreen() {
 
   const statusConfig = getStatusConfig(contest.status);
 
+  // Função para gerar URL do PCI Concursos baseado no concurso
+  const getPCIConcursosLink = (contestData: Contest): string => {
+    // Criar uma URL de busca no PCI Concursos baseada na instituição e cargo
+    const searchQuery = encodeURIComponent(`${contestData.institution} ${contestData.role}`);
+    return `https://www.pciconcursos.com.br/busca?q=${searchQuery}`;
+  };
+
   const handleOpenLink = async () => {
     try {
-      const canOpen = await Linking.canOpenURL(contest.details.link);
+      // Usar link do PCI Concursos ao invés do link direto
+      const pciLink = getPCIConcursosLink(contest);
+      const canOpen = await Linking.canOpenURL(pciLink);
       if (canOpen) {
-        await Linking.openURL(contest.details.link);
+        await Linking.openURL(pciLink);
       }
     } catch (error) {
       console.error('Erro ao abrir link:', error);
@@ -188,9 +197,16 @@ export default function ContestDetailsScreen() {
 
         {/* Seção de Nivelamento */}
         <View style={styles.levelingSection}>
-          <Text style={styles.sectionTitle}>Nivelamento</Text>
+          <View style={styles.levelingHeader}>
+            <MaterialCommunityIcons
+              name="school-outline"
+              size={24}
+              color={palette.accent}
+            />
+            <Text style={styles.sectionTitle}>Prepare-se para o Concurso</Text>
+          </View>
           <Text style={styles.levelingText}>
-            Este concurso exige conhecimentos em matérias-base. Que tal verificar se você está preparado?
+            Antes de se inscrever, é importante avaliar seu nível de conhecimento nas matérias que serão cobradas na prova. Faça nosso teste de nivelamento e descubra quais áreas você precisa estudar mais!
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/studies')}
@@ -199,7 +215,7 @@ export default function ContestDetailsScreen() {
               pressed && styles.levelingButtonPressed,
             ]}>
             <MaterialCommunityIcons name="school-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.levelingButtonText}>Quero testar meus conhecimentos</Text>
+            <Text style={styles.levelingButtonText}>Fazer Teste de Nivelamento</Text>
           </Pressable>
         </View>
 
@@ -213,10 +229,10 @@ export default function ContestDetailsScreen() {
           <MaterialCommunityIcons name="open-in-new" size={20} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>
             {contest.status === 'open'
-              ? 'Acessar Edital'
+              ? 'Ver no PCI Concursos'
               : contest.status === 'soon'
-                ? 'Ver Mais Informações'
-                : 'Ver Detalhes'}
+                ? 'Ver no PCI Concursos'
+                : 'Ver no PCI Concursos'}
           </Text>
         </Pressable>
       </ScrollView>
@@ -364,6 +380,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: palette.cardBorder,
+  },
+  levelingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
   },
   levelingText: {
     color: palette.mutedText,

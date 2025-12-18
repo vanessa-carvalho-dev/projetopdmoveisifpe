@@ -87,6 +87,41 @@ export function ContestCard({ contest, onPress }: ContestCardProps) {
         <View style={[styles.tag, { backgroundColor: palette.card2 }]}>
           <Text style={styles.tagText}>{getLevelLabel(contest.level)}</Text>
         </View>
+        {contest.requirements.requiresCNH && (
+          <View style={[styles.tag, { backgroundColor: 'rgba(91,97,255,0.15)' }]}>
+            <MaterialCommunityIcons
+              name="car-outline"
+              size={12}
+              color={palette.accent}
+              style={styles.tagIcon}
+            />
+            <Text style={[styles.tagText, { color: palette.accent }]}>CNH</Text>
+          </View>
+        )}
+        {contest.requirements.requiresTAF && (
+          <View style={[styles.tag, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
+            <MaterialCommunityIcons
+              name="dumbbell"
+              size={12}
+              color="#F59E0B"
+              style={styles.tagIcon}
+            />
+            <Text style={[styles.tagText, { color: '#F59E0B' }]}>TAF</Text>
+          </View>
+        )}
+        {contest.requirements.maxAge && (
+          <View style={[styles.tag, { backgroundColor: 'rgba(107,114,128,0.15)' }]}>
+            <MaterialCommunityIcons
+              name="calendar-clock"
+              size={12}
+              color={palette.mutedText}
+              style={styles.tagIcon}
+            />
+            <Text style={[styles.tagText, { color: palette.mutedText }]}>
+              Até {contest.requirements.maxAge} anos
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Ícone de seta */}
@@ -178,6 +213,9 @@ const styles = StyleSheet.create({
     color: palette.text,
     fontSize: 12,
     fontWeight: '800',
+  },
+  tagIcon: {
+    marginRight: 4,
   },
   arrowContainer: {
     position: 'absolute',

@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 
 const PROFILE_STORAGE_KEY = 'souconcursado.userProfile';
+const QUIZ_ANSWERS_STORAGE_KEY = 'souconcursado.quizAnswers';
 
 export default function QuizResultScreen() {
   const params = useLocalSearchParams<{
@@ -52,6 +53,19 @@ export default function QuizResultScreen() {
   const handleSeeConcursos = () => {
     // Navegar para a tela de concursos recomendados
     router.push('/(tabs)');
+  };
+
+  const handleRefazerQuiz = async () => {
+    try {
+      // Limpar dados do quiz e perfil
+      await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
+      await AsyncStorage.removeItem(QUIZ_ANSWERS_STORAGE_KEY);
+      
+      // Navegar para a tela do quiz
+      router.replace('/quiz');
+    } catch (error) {
+      console.error('Erro ao limpar dados do quiz:', error);
+    }
   };
 
   return (
@@ -102,13 +116,19 @@ export default function QuizResultScreen() {
           <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
         </Pressable>
 
-        {/* Botão secundário para voltar */}
+        {/* Botão secundário para refazer quiz */}
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleRefazerQuiz}
           style={({ pressed }) => [
             styles.secondaryButton,
             pressed && styles.secondaryButtonPressed,
           ]}>
+          <MaterialCommunityIcons
+            name="refresh"
+            size={16}
+            color={colors.mutedText}
+            style={{ marginRight: 6 }}
+          />
           <Text style={styles.secondaryButtonText}>Refazer Quiz</Text>
         </Pressable>
       </ScrollView>
@@ -223,6 +243,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 14,
     paddingHorizontal: 20,
   },
