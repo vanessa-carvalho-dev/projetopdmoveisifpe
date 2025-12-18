@@ -10,14 +10,14 @@ import { SubjectId } from '@/constants/subjectsData';
 const DIAGNOSIS_RESULTS_STORAGE_KEY = 'souconcursado.diagnosisResults';
 
 export default function DiagnosisResultScreen() {
-  const params = useLocalSearchParams<{
-    subjectId: string;
-    subjectName: string;
-    level: string;
-    percentage: string;
-    correctAnswers: string;
-    totalQuestions: string;
-  }>;
+  const params = useLocalSearchParams() as {
+    subjectId?: string | string[];
+    subjectName?: string | string[];
+    level?: string | string[];
+    percentage?: string | string[];
+    correctAnswers?: string | string[];
+    totalQuestions?: string | string[];
+  };
 
   const [resultData, setResultData] = useState<{
     level: 'Iniciante' | 'Intermediário' | 'Avançado';
@@ -28,18 +28,33 @@ export default function DiagnosisResultScreen() {
 
   const palette = Colors.dark;
 
+  // Função auxiliar para normalizar parâmetros (podem vir como array ou string)
+  const getParam = (param: string | string[] | undefined): string => {
+    if (Array.isArray(param)) {
+      return param[0] || '';
+    }
+    return param || '';
+  };
+
   useEffect(() => {
     const loadResult = async () => {
       try {
-        // Primeiro, tentar usar os parâmetros passados
-        if (params.correctAnswers && params.totalQuestions) {
-          const level = (params.level || 'Iniciante') as 'Iniciante' | 'Intermediário' | 'Avançado';
-          const percentage = parseFloat(params.percentage || '0') || 0;
-          const correctAnswers = parseInt(params.correctAnswers || '0', 10) || 0;
-          const totalQuestions = parseInt(params.totalQuestions || '0', 10) || 0;
+        // Normalizar parâmetros
+        const correctAnswersParam = getParam(params.correctAnswers as string | string[] | undefined);
+        const totalQuestionsParam = getParam(params.totalQuestions as string | string[] | undefined);
+        const percentageParam = getParam(params.percentage as string | string[] | undefined);
+        const levelParam = getParam(params.level as string | string[] | undefined);
+        const subjectIdParam = getParam(params.subjectId as string | string[] | undefined);
+
+        // Primeiro, tentar usar os parâmetros passados diretamente
+        if (correctAnswersParam && totalQuestionsParam && percentageParam) {
+          const level = (levelParam || 'Iniciante') as 'Iniciante' | 'Intermediário' | 'Avançado';
+          const percentage = parseFloat(percentageParam) || 0;
+          const correctAnswers = parseInt(correctAnswersParam, 10) || 0;
+          const totalQuestions = parseInt(totalQuestionsParam, 10) || 0;
 
           // Só definir se os valores forem válidos
-          if (totalQuestions > 0) {
+          if (totalQuestions > 0 && !isNaN(percentage) && !isNaN(correctAnswers)) {
             setResultData({
               level,
               percentage,
@@ -50,9 +65,9 @@ export default function DiagnosisResultScreen() {
             // Salvar resultado no AsyncStorage
             const resultsData = await AsyncStorage.getItem(DIAGNOSIS_RESULTS_STORAGE_KEY);
             const results = resultsData ? JSON.parse(resultsData) : {};
-            if (params.subjectId) {
-              results[params.subjectId] = {
-                subjectId: params.subjectId,
+            if (subjectIdParam) {
+              results[subjectIdParam] = {
+                subjectId: subjectIdParam,
                 level,
                 percentage,
                 correctAnswers,
@@ -66,11 +81,11 @@ export default function DiagnosisResultScreen() {
         }
         
         // Se não houver parâmetros válidos, tentar carregar do AsyncStorage
-        if (params.subjectId) {
+        if (subjectIdParam) {
           const resultsData = await AsyncStorage.getItem(DIAGNOSIS_RESULTS_STORAGE_KEY);
           if (resultsData) {
             const results = JSON.parse(resultsData);
-            const savedResult = results[params.subjectId];
+            const savedResult = results[subjectIdParam];
             if (savedResult && savedResult.totalQuestions > 0) {
               setResultData({
                 level: savedResult.level,
@@ -103,7 +118,7 @@ export default function DiagnosisResultScreen() {
     };
 
     loadResult();
-  }, [params.subjectId]);
+  }, [params]);
 
   if (!resultData) {
     return (
