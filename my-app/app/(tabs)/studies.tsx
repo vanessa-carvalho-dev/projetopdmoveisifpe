@@ -12,47 +12,42 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { SUBJECTS, Subject, SubjectId } from '@/constants/subjectsData';
+import { DiagnosisResult } from '@/constants/types';
 
-const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults';
+const DIAGNOSIS_RESULTS_STORAGE_KEY = 'souconcursado.diagnosisResults';
+const QUIZ_RESULTS_STORAGE_KEY = 'souconcursado.quizResults'; // Mantido para compatibilidade
 
-type QuizResult = {
-  subjectId: SubjectId;
-  correctAnswers: number;
-  totalQuestions: number;
-  completedAt: string;
-};
-
-type QuizResults = {
-  [subjectId: string]: QuizResult;
+type DiagnosisResults = {
+  [subjectId: string]: DiagnosisResult;
 };
 
 export default function StudiesScreen() {
-  const [quizResults, setQuizResults] = useState<QuizResults>({});
+  const [diagnosisResults, setDiagnosisResults] = useState<DiagnosisResults>({});
   const [loading, setLoading] = useState(true);
   const palette = Colors.dark;
 
   useFocusEffect(
     useCallback(() => {
-      loadQuizResults();
+      loadDiagnosisResults();
     }, [])
   );
 
-  const loadQuizResults = async () => {
+  const loadDiagnosisResults = async () => {
     try {
-      const resultsData = await AsyncStorage.getItem(QUIZ_RESULTS_STORAGE_KEY);
+      const resultsData = await AsyncStorage.getItem(DIAGNOSIS_RESULTS_STORAGE_KEY);
       if (resultsData) {
-        setQuizResults(JSON.parse(resultsData));
+        setDiagnosisResults(JSON.parse(resultsData));
       }
     } catch (error) {
-      console.error('Erro ao carregar resultados dos quizzes:', error);
+      console.error('Erro ao carregar resultados do diagnóstico:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStartQuiz = (subject: Subject) => {
+  const handleStartDiagnosis = (subject: Subject) => {
     router.push({
-      pathname: '/quiz',
+      pathname: '/diagnosis',
       params: {
         subjectId: subject.id,
         subjectName: subject.name,
@@ -60,20 +55,32 @@ export default function StudiesScreen() {
     });
   };
 
-  const getSubjectResult = (subjectId: SubjectId): QuizResult | null => {
-    return quizResults[subjectId] || null;
+  const getSubjectResult = (subjectId: SubjectId): DiagnosisResult | null => {
+    return diagnosisResults[subjectId] || null;
   };
 
-  const getEncouragementMessage = (correctAnswers: number, totalQuestions: number): string => {
-    const percentage = (correctAnswers / totalQuestions) * 100;
-    if (percentage >= 80) {
-      return 'Excelente! 🎉';
-    } else if (percentage >= 60) {
-      return 'Mandou bem! 👏';
-    } else if (percentage >= 40) {
-      return 'Bora melhorar? 💪';
+  const getLevelColor = (level?: string) => {
+    switch (level) {
+      case 'Iniciante':
+        return '#F44336';
+      case 'Intermediário':
+        return '#FF9800';
+      case 'Avançado':
+        return '#4CAF50';
+      default:
+        return palette.accent;
+    }
+  };
+
+  const getMotivationalMessage = (result: DiagnosisResult): string => {
+    if (result.percentage >= 80) {
+      return 'Excelente desempenho! 🎉';
+    } else if (result.percentage >= 60) {
+      return 'Bom desempenho! 👏';
+    } else if (result.percentage >= 40) {
+      return 'Continue praticando! 💪';
     } else {
-      return 'Continue praticando! 📚';
+      return 'Não desista! 📚';
     }
   };
 
@@ -94,33 +101,41 @@ export default function StudiesScreen() {
           <View style={styles.cardTitleContainer}>
             <Text style={styles.cardTitle}>{subject.name}</Text>
             <Text style={styles.cardSubtitle}>
-              {subject.questionCount} perguntas
+              {subject.questionCount} questões
             </Text>
           </View>
         </View>
 
         {isCompleted ? (
           <View style={styles.resultContainer}>
+            <View style={styles.levelBadgeContainer}>
+              <View style={[styles.levelBadge, { backgroundColor: getLevelColor(result.level) + '20' }]}>
+                <Text style={[styles.levelText, { color: getLevelColor(result.level) }]}>
+                  {result.level}
+                </Text>
+              </View>
+            </View>
             <View style={styles.progressBarContainer}>
               <View
                 style={[
                   styles.progressBar,
                   {
-                    width: `${(result.correctAnswers / result.totalQuestions) * 100}%`,
+                    width: `${result.percentage}%`,
+                    backgroundColor: getLevelColor(result.level),
                   },
                 ]}
               />
             </View>
             <View style={styles.resultTextContainer}>
               <Text style={styles.resultText}>
-                Acertos: {result.correctAnswers}/{result.totalQuestions}
+                {result.correctAnswers}/{result.totalQuestions} acertos ({result.percentage.toFixed(1)}%)
               </Text>
               <Text style={styles.encouragementText}>
-                {getEncouragementMessage(result.correctAnswers, result.totalQuestions)}
+                {getMotivationalMessage(result)}
               </Text>
             </View>
             <Pressable
-              onPress={() => handleStartQuiz(subject)}
+              onPress={() => handleStartDiagnosis(subject)}
               style={({ pressed }) => [
                 styles.retryButton,
                 pressed && styles.retryButtonPressed,
@@ -130,17 +145,17 @@ export default function StudiesScreen() {
                 size={16}
                 color={palette.accent}
               />
-              <Text style={styles.retryButtonText}>Refazer teste</Text>
+              <Text style={styles.retryButtonText}>Refazer diagnóstico</Text>
             </Pressable>
           </View>
         ) : (
           <Pressable
-            onPress={() => handleStartQuiz(subject)}
+            onPress={() => handleStartDiagnosis(subject)}
             style={({ pressed }) => [
               styles.startButton,
               pressed && styles.startButtonPressed,
             ]}>
-            <Text style={styles.startButtonText}>Iniciar</Text>
+            <Text style={styles.startButtonText}>Iniciar Diagnóstico</Text>
             <MaterialCommunityIcons
               name="arrow-right"
               size={18}
@@ -157,9 +172,9 @@ export default function StudiesScreen() {
       <View style={styles.container}>
         {/* Cabeçalho */}
         <View style={styles.header}>
-          <Text style={styles.title}>Guia de Estudos</Text>
+          <Text style={styles.title}>Diagnóstico de Nivelamento</Text>
           <Text style={styles.subtitle}>
-            Vamos descobrir seus pontos fortes? 🚀 Responda a quizzes rápidos e saiba exatamente onde focar sua energia.
+            Avalie seu nível atual nas matérias básicas com questões reais de concursos. Descubra se você está no nível Iniciante, Intermediário ou Avançado! 🎯
           </Text>
         </View>
 
@@ -250,12 +265,26 @@ const styles = StyleSheet.create({
   resultContainer: {
     gap: 12,
   },
+  levelBadgeContainer: {
+    marginBottom: 12,
+  },
+  levelBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  levelText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
   resultTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: 8,
+    marginTop: 8,
   },
   progressBarContainer: {
     height: 8,
@@ -265,11 +294,10 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: palette.accent,
     borderRadius: 4,
   },
   resultText: {
-    color: palette.accent,
+    color: palette.text,
     fontSize: 14,
     fontWeight: '800',
     flex: 1,
