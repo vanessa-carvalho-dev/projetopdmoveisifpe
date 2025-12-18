@@ -172,7 +172,7 @@ export default function StudiesScreen() {
       <View style={styles.container}>
         {/* Cabeçalho */}
         <View style={styles.header}>
-          <Text style={styles.title}>Diagnóstico de Nivelamento</Text>
+          <Text style={styles.title}>Quiz de Nivelamento</Text>
           <Text style={styles.subtitle}>
             Avalie seu nível atual nas matérias básicas com questões reais de concursos. Descubra se você está no nível Iniciante, Intermediário ou Avançado! 🎯
           </Text>
