@@ -6,6 +6,12 @@ SouConcursado é uma aplicação móvel de utilidade pública que atua como um *
 
 O seu objetivo principal é filtrar o universo diverso dos concursos e dar um ponto de partida para o candidato iniciante. Através de perguntas de múltipla escolha, a aplicação traça o perfil e fornece recomendações sobre quais carreiras públicas você pode seguir.
 
+## Vídeo Demonstrativo
+
+Confira o funcionamento do aplicativo e suas funcionalidades no link abaixo:
+
+[**Assistir à Demonstração do SouConcursado**](https://drive.google.com/file/d/1t-Ak4ZkFtHzhT19JsOTIRavmSxJp3CJh/view?usp=sharing)
+
 ## O que Podemos Encontrar no Aplicativo?
 
 - **Autenticação e Perfil:**
