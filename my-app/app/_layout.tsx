@@ -20,6 +20,8 @@ export default function RootLayout() {
         <Stack.Screen name="quiz" options={{ headerShown: false }} />
         <Stack.Screen name="quiz-result" options={{ headerShown: false }} />
         <Stack.Screen name="contest-details" options={{ headerShown: false }} />
+        <Stack.Screen name="diagnosis" options={{ headerShown: false }} />
+        <Stack.Screen name="diagnosis-result" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>

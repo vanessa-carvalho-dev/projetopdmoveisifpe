@@ -36,15 +36,16 @@ export default function DiagnosisResultScreen() {
     return param || '';
   };
 
+  // Extrair valores dos parâmetros para usar como dependências (valores primitivos)
+  const correctAnswersParam = getParam(params.correctAnswers as string | string[] | undefined);
+  const totalQuestionsParam = getParam(params.totalQuestions as string | string[] | undefined);
+  const percentageParam = getParam(params.percentage as string | string[] | undefined);
+  const levelParam = getParam(params.level as string | string[] | undefined);
+  const subjectIdParam = getParam(params.subjectId as string | string[] | undefined);
+
   useEffect(() => {
     const loadResult = async () => {
       try {
-        // Normalizar parâmetros
-        const correctAnswersParam = getParam(params.correctAnswers as string | string[] | undefined);
-        const totalQuestionsParam = getParam(params.totalQuestions as string | string[] | undefined);
-        const percentageParam = getParam(params.percentage as string | string[] | undefined);
-        const levelParam = getParam(params.level as string | string[] | undefined);
-        const subjectIdParam = getParam(params.subjectId as string | string[] | undefined);
 
         // Primeiro, tentar usar os parâmetros passados diretamente
         if (correctAnswersParam && totalQuestionsParam && percentageParam) {
@@ -118,7 +119,7 @@ export default function DiagnosisResultScreen() {
     };
 
     loadResult();
-  }, [params]);
+  }, [subjectIdParam, correctAnswersParam, totalQuestionsParam, percentageParam, levelParam]);
 
   if (!resultData) {
     return (
